@@ -91,35 +91,53 @@
 #define NOTE_DS8 4978
 #define REST        0
 
+
+const int16_t harkTheHerald[] PROGMEM {
+    NOTE_D4,4, NOTE_G4,4, NOTE_G4,-4, NOTE_F4,8, NOTE_G4,4, NOTE_B4,4, NOTE_B4,4, NOTE_A4,4, NOTE_D5,4, NOTE_D5,4,
+    NOTE_D5,-4, NOTE_C5,8, NOTE_B4,4, NOTE_A4,4, NOTE_B4,2, NOTE_D4,4, NOTE_G4,4, NOTE_G4,-4, NOTE_F4,8, NOTE_G4,4,
+    NOTE_B4,4, NOTE_B4,4, NOTE_A4,4, NOTE_D5,4, NOTE_A4,4, NOTE_A4,-4, NOTE_F4,8, NOTE_F4,4, NOTE_E4,8, NOTE_D4,8, NOTE_D4,2, 
+
+    NOTE_D5,4, NOTE_D5,4, NOTE_D5,4, NOTE_G4,4, NOTE_C5,4, NOTE_B4,4, NOTE_B4,4, NOTE_A4,4, NOTE_D5,4, NOTE_D5,4,
+    NOTE_D5,4, NOTE_G4,4, NOTE_C5,4, NOTE_B4,4, NOTE_B4,4, NOTE_A4,4, NOTE_E5,4, NOTE_E5,4, NOTE_E5,4, NOTE_D5,4,
+    NOTE_C5,4, NOTE_B4,4, NOTE_C5,2, NOTE_A4,4, NOTE_B4,8, NOTE_C5,8, NOTE_D5,-4, NOTE_G4,8, NOTE_G4,4, NOTE_A4,4, NOTE_B4,2, 
+
+    NOTE_E5,-4, NOTE_E5,8, NOTE_E5,4, NOTE_D5,4, NOTE_C5,4, NOTE_B4,4, NOTE_C5,2, NOTE_A4,4, NOTE_B4,8, NOTE_C5,8, NOTE_D5,-4, NOTE_G4,8, NOTE_G4,4, NOTE_A4,4, NOTE_G4,2
+};
+
+
 void setup() {
-  pinMode(BUZZERPIN, OUTPUT);
+    pinMode(BUZZERPIN, OUTPUT);
 }
+
 
 void loop() {
-  whiteChristmas(155);    // songTempo is a uint8_t so it can be 0-255.
-  delay(2000);
+    playMusic(harkTheHerald, sizeof(harkTheHerald) / sizeof(harkTheHerald[0]) / 2, 140);
+
+    delay(2000);
 }
 
-void whiteChristmas(uint8_t songTempo) {
-  int16_t melody[] {
-    NOTE_B4,1, NOTE_C5,4, NOTE_B4,4, NOTE_AS4,4, NOTE_B4,4, NOTE_C5,1, NOTE_CS5,4, NOTE_D5,-2, REST,16, NOTE_E5,4, NOTE_FS5,4, NOTE_G5,4, NOTE_A5,4, NOTE_G5,4, NOTE_FS5,4, NOTE_E5,4, NOTE_D5,1, REST,8, NOTE_G4,4, NOTE_A4,4,
-    NOTE_B4,2, NOTE_B4,2, NOTE_B4,4, NOTE_E5,2, NOTE_D5,4, NOTE_G4,2, NOTE_G4,2, NOTE_G4,4, NOTE_D5,2, NOTE_C5,4, NOTE_B4,1, NOTE_C5,4, NOTE_B4,4, NOTE_A4,4, NOTE_G4,4, NOTE_A4,-1,
-    NOTE_B4,1, NOTE_C5,4, NOTE_B4,4, NOTE_AS4,4, NOTE_B4,4, NOTE_C5,1, NOTE_CS5,4, NOTE_D5,-2, REST,16, NOTE_E5,4, NOTE_FS5,4, NOTE_G5,4, NOTE_A5,4, NOTE_G5,4, NOTE_FS5,4, NOTE_E5,4, NOTE_D5,1, REST,8, NOTE_G4,4, NOTE_A4,4,
-    NOTE_B4,2, NOTE_B4,2, NOTE_B4,4, NOTE_E5,2, NOTE_D5,4, NOTE_G5,1, REST,16, NOTE_G4,4, NOTE_A4,4, NOTE_B4,2, NOTE_B4,2, NOTE_E5,4, NOTE_E5,4, NOTE_FS4,4, NOTE_FS4,4, NOTE_G4,-1
-  };
-  uint16_t notes = sizeof(melody) / sizeof(melody[0]) / 2;
-  uint16_t wholenote = (60000 * 4) / songTempo;
-  int8_t divider;
-  uint16_t noteDuration;
-  for (uint16_t i=0; i<notes*2; i+=2) {
-    divider = melody[i+1];
-    if (divider > 0) {
-      noteDuration = wholenote / divider;
-    } else {
-      noteDuration = wholenote / abs(divider) * 1.5;
+
+void playMusic(int16_t melody[], uint16_t numNotes, uint16_t songTempo) {
+    uint16_t wholeNote = (60000 * 4) / songTempo;
+
+    uint16_t noteDuration;
+
+    int8_t noteType;
+
+    for (uint16_t i = 0; i < numNotes * 2; i += 2) {
+        noteType = pgm_read_word(&melody[i + 1]);
+
+        if (noteType > 0) {
+            noteDuration = wholeNote / noteType;
+        }
+        else {
+            noteDuration = wholeNote / abs(noteType) * 1.5;
+        }
+
+        tone(BUZZERPIN, pgm_read_word(&melody[i]), noteDuration * 0.9);
+
+        delay(noteDuration);
+
+        noTone(BUZZERPIN);
     }
-    tone(BUZZERPIN, melody[i], noteDuration * 0.9);
-    delay(noteDuration);
-    noTone(BUZZERPIN);
-  }
 }
